@@ -8,9 +8,11 @@ var bodyParser = require('body-parser');
 var http=require('http');
 var routes = require('./routes/index');
 var users = require('./routes/users');
-
+var api = require('./routes/api');
+var auth = require('./routes/auth');
+var session=require('express-session');
 var app = express();
-
+var MongoStore = require('connect-mongo')(session);
 // view engine setup
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
@@ -23,11 +25,21 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+var options={
+  url:"mongodb://localhost/session"
+}
+app.use(session({ store: new MongoStore(options),
+                  secret: 'keyboard cat',
+                  cookie: { maxAge: 60000 }
+                }));
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
-
+app.use('/api', api);
+app.use('/auth', auth);
 app.all('*',function(req,res){
   res.send('Hello world to all unhandled requests');
 })
